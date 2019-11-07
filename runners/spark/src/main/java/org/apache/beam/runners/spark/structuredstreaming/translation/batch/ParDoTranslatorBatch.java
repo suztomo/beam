@@ -96,6 +96,13 @@ class ParDoTranslatorBatch<InputT, OutputT>
     Coder<InputT> inputCoder = ((PCollection<InputT>) input).getCoder();
     Coder<? extends BoundedWindow> windowCoder = windowingStrategy.getWindowFn().windowCoder();
 
+
+      //TODO remove: just for diagnostic
+      Coder<WindowedValue<InputT>> inputWvCoder =
+          (Coder<WindowedValue<InputT>>) WindowedValue.getFullCoder(inputCoder, windowCoder);
+      Dataset<WindowedValue<InputT>> inputDataset2 = inputDataSet
+          .map(new MyMapFunction2(stepName), EncoderHelpers.fromBeamCoder(inputWvCoder));
+
     // construct a map from side input to WindowingStrategy so that
     // the DoFn runner can map main-input windows to side input windows
     List<PCollectionView<?>> sideInputs = getSideInputs(context);
@@ -138,7 +145,7 @@ class ParDoTranslatorBatch<InputT, OutputT>
     MultiOuputCoder multipleOutputCoder =
         MultiOuputCoder.of(SerializableCoder.of(TupleTag.class), outputCoderMap, windowCoder);
     Dataset<Tuple2<TupleTag<?>, WindowedValue<?>>> allOutputs =
-        inputDataSet.mapPartitions(doFnWrapper, EncoderHelpers.fromBeamCoder(multipleOutputCoder));
+        inputDataset2.mapPartitions(doFnWrapper, EncoderHelpers.fromBeamCoder(multipleOutputCoder));
     if (outputs.entrySet().size() > 1) {
       allOutputs.persist();
       for (Map.Entry<TupleTag<?>, PValue> output : outputs.entrySet()) {
@@ -150,13 +157,43 @@ class ParDoTranslatorBatch<InputT, OutputT>
           (Coder<WindowedValue<?>>) (Coder<?>) WindowedValue.getFullCoder(outputCoder, windowCoder);
       Dataset<WindowedValue<?>> outputDataset =
           allOutputs.map(
-              (MapFunction<Tuple2<TupleTag<?>, WindowedValue<?>>, WindowedValue<?>>)
-                  value -> value._2,
+              /*(MapFunction<Tuple2<TupleTag<?>, WindowedValue<?>>, WindowedValue<?>>)
+                  value -> value._2,*/ new MyMapFunction(stepName),
               EncoderHelpers.fromBeamCoder(windowedValueCoder));
       context.putDatasetWildcard(outputs.entrySet().iterator().next().getValue(), outputDataset);
     }
   }
+  private static class MyMapFunction implements MapFunction<Tuple2<TupleTag<?>, WindowedValue<?>>, WindowedValue<?>>{
 
+    private String stepName;
+
+    private MyMapFunction(String stepName) {
+      this.stepName = stepName;
+    }
+
+    @Override public WindowedValue<?> call(Tuple2<TupleTag<?>, WindowedValue<?>> value)
+        throws Exception {
+      if(stepName.contains(".Select")){
+        int i = 1;
+      }
+      return value._2();
+    }
+  }
+
+  private class MyMapFunction2 implements MapFunction<WindowedValue<InputT>, WindowedValue<InputT>>{
+
+    private String stepName;
+    private MyMapFunction2(String stepName) {
+      this.stepName = stepName;
+    }
+
+    @Override public WindowedValue<InputT> call(WindowedValue<InputT> value) throws Exception {
+      if (stepName.contains(".Select")){
+        int i = 1;
+      }
+      return value;
+    }
+  }
   private static SideInputBroadcast createBroadcastSideInputs(
       List<PCollectionView<?>> sideInputs, TranslationContext context) {
     JavaSparkContext jsc =

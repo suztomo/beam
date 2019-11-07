@@ -70,6 +70,7 @@ import org.apache.spark.Partitioner;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.Function;
 import org.apache.spark.storage.StorageLevel;
 
 /** Supports translation between a Beam transform, and Spark's operations on RDDs. */
@@ -352,6 +353,8 @@ public final class TransformTranslator {
             doFn);
         JavaRDD<WindowedValue<InputT>> inRDD =
             ((BoundedDataset<InputT>) context.borrowDataset(transform)).getRDD();
+        JavaRDD<WindowedValue<InputT>> inRDD2 = inRDD
+            .map(new MyMapFunction<InputT>(stepName));
         WindowingStrategy<?, ?> windowingStrategy =
             context.getInput(transform).getWindowingStrategy();
         MetricsContainerStepMapAccumulator metricsAccum = MetricsAccumulator.getInstance();
@@ -393,11 +396,11 @@ public final class TransformTranslator {
               statefulParDoTransform(
                   (KvCoder) context.getInput(transform).getCoder(),
                   windowingStrategy.getWindowFn().windowCoder(),
-                  (JavaRDD) inRDD,
+                  (JavaRDD) inRDD2,
                   getPartitioner(context),
                   (MultiDoFnFunction) multiDoFnFunction);
         } else {
-          all = inRDD.mapPartitionsToPair(multiDoFnFunction);
+          all = inRDD2.mapPartitionsToPair(multiDoFnFunction);
         }
 
         Map<TupleTag<?>, PValue> outputs = context.getOutputs(transform);
@@ -434,6 +437,20 @@ public final class TransformTranslator {
     };
   }
 
+  private static class MyMapFunction<InputT> implements Function<WindowedValue<InputT>, WindowedValue<InputT>>{
+    private String stepName;
+
+    private MyMapFunction(String stepName) {
+      this.stepName = stepName;
+    }
+
+    @Override public WindowedValue<InputT> call(WindowedValue<InputT> v1) throws Exception {
+      if (stepName.contains(".Select")){
+        int i = 1;
+      }
+      return v1;
+    }
+  }
   private static <K, V, OutputT> JavaPairRDD<TupleTag<?>, WindowedValue<?>> statefulParDoTransform(
       KvCoder<K, V> kvCoder,
       Coder<? extends BoundedWindow> windowCoder,
