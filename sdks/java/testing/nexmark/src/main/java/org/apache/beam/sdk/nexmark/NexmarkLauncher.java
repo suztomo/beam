@@ -1270,9 +1270,11 @@ public class NexmarkLauncher<OptionT extends NexmarkOptions> {
             NexmarkQueryName.CURRENCY_CONVERSION,
             new NexmarkQuery(configuration, new Query1(configuration)))
         .put(NexmarkQueryName.SELECTION, new NexmarkQuery(configuration, new Query2(configuration)))
+/*
         .put(
             NexmarkQueryName.LOCAL_ITEM_SUGGESTION,
             new NexmarkQuery(configuration, new Query3(configuration)))
+*/
         .put(
             NexmarkQueryName.AVERAGE_PRICE_FOR_CATEGORY,
             new NexmarkQuery(configuration, new Query4(configuration)))

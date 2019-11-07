@@ -115,7 +115,7 @@ public class Query5 extends NexmarkQueryTransform<AuctionCount> {
                       }
                     })
                 .withoutDefaults()
-                .withFanout(configuration.fanout))
+                .withFanout(0))
 
         // Project into result.
         .apply(
