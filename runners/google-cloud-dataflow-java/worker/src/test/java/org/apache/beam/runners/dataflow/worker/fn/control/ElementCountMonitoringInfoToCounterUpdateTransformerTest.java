@@ -22,7 +22,11 @@ import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import com.google.api.client.json.GenericJson;
+import com.google.api.client.json.JsonParser;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.dataflow.model.CounterUpdate;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -108,10 +112,30 @@ public class ElementCountMonitoringInfoToCounterUpdateTransformerTest {
     CounterUpdate result = testObject.transform(monitoringInfo);
     assertNotEquals(null, result);
 
-    assertEquals(
-        "{cumulative=true, integer={highBits=0, lowBits=0}, "
-            + "nameAndKind={kind=SUM, "
-            + "name=transformedValue-ElementCount}}",
-        result.toString());
+    // Comparing JSON is more resilient against dependency upgrades than comparing toString, because
+    // the latter is prone to unnecessary test code maintenance upon internal changes such as field
+    // ordering and toString implementation.
+    assertEqualsOnJson(
+        "{\"cumulative\":true, \"integer\":{\"highBits\":0, \"lowBits\":0}, "
+            + "\"nameAndKind\":{\"kind\":\"SUM\", "
+            + "\"name\":\"transformedValue-ElementCount\"}}",
+        result);
+  }
+
+  // The following field and methods should go to shared test utility class (sdks/testing?)
+  private static final JacksonFactory jacksonFactory = JacksonFactory.getDefaultInstance();
+
+  public static <T extends GenericJson> void assertEqualsOnJson(String expectedJsonText, T actual) {
+    CounterUpdate expected = parse(expectedJsonText, CounterUpdate.class);
+    assertEquals(expected, actual);
+  }
+
+  public static <T extends GenericJson> T parse(String text, Class<T> clazz) {
+    try {
+      JsonParser parser = jacksonFactory.createJsonParser(text);
+      return parser.parse(clazz);
+    } catch (IOException ex) {
+      throw new IllegalArgumentException("Could not parse the text as " + clazz, ex);
+    }
   }
 }
