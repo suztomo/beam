@@ -208,8 +208,10 @@ public class BigQueryUtilTest {
               ref, rows, ids, InsertRetryPolicy.alwaysRetry(), null, null, false, false);
     } finally {
       verifyInsertAll(5);
-      // Each of the 25 rows is 23 bytes: "{f=[{v=foo}, {v=1234}]}"
-      assertEquals("Incorrect byte count", 25L * 23L, totalBytes);
+
+      int rowSize = rawRow("foo", 1234).toString().length();
+      // Each of the 25 rows has the length of the toString of "{f=[{v=foo}, {v=1234}]}"
+      assertEquals("Incorrect byte count", 25L * rowSize, totalBytes);
     }
   }
 }
