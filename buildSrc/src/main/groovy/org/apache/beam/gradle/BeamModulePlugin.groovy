@@ -406,6 +406,7 @@ class BeamModulePlugin implements Plugin<Project> {
     def influxdb_version = "2.19"
     def jackson_version = "2.10.2"
     def jaxb_api_version = "2.3.3"
+    def log4j_version = "2.13.3"
     def kafka_version = "1.0.0"
     def nemo_version = "0.1"
     def netty_version = "4.1.51.Final"
@@ -546,6 +547,9 @@ class BeamModulePlugin implements Plugin<Project> {
         junit                                       : "junit:junit:4.13-beta-3",
         kafka                                       : "org.apache.kafka:kafka_2.11:$kafka_version",
         kafka_clients                               : "org.apache.kafka:kafka-clients:$kafka_version",
+        // Beam uses slf4j as its default logging library. Use log4j only in the right scope required by transitive dependencies.
+        log4j_api                                   : "org.apache.logging.log4j:log4j-api:$log4j_version",
+        log4j_core                                  : "org.apache.logging.log4j:log4j-core:$log4j_version",
         mockito_core                                : "org.mockito:mockito-core:3.0.0",
         nemo_compiler_frontend_beam                 : "org.apache.nemo:nemo-compiler-frontend-beam:$nemo_version",
         netty_handler                               : "io.netty:netty-handler:$netty_version",

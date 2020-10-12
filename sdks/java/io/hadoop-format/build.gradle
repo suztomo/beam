@@ -29,7 +29,6 @@ enableJavaPerformanceTesting()
 description = "Apache Beam :: SDKs :: Java :: IO :: Hadoop Format"
 ext.summary = "IO to read data from sources and to write data to sinks that implement Hadoop MapReduce Format."
 
-def log4j_version = "2.6.2"
 def elastic_search_version = "7.9.2"
 
 configurations.create("sparkRunner")
@@ -80,10 +79,10 @@ dependencies {
   testCompile library.java.cassandra_driver_mapping
   testCompile "org.apache.cassandra:cassandra-all:3.11.8"
   testCompile library.java.postgres
-  testCompile "org.apache.logging.log4j:log4j-core:$log4j_version"
   testCompile library.java.junit
   testCompile library.java.hamcrest_core
   testCompile library.java.hamcrest_library
+  testRuntimeOnly library.java.log4j_core
   testRuntimeOnly library.java.slf4j_jdk14
   testRuntimeOnly project(path: ":runners:direct-java", configuration: "shadow")
 
