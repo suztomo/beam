@@ -26,8 +26,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URI;
 import org.apache.beam.sdk.io.hcatalog.test.EmbeddedMetastoreService;
 import org.apache.beam.sdk.schemas.Schema;
+import org.apache.logging.log4j.core.util.ReflectionUtil;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -49,6 +51,14 @@ public class HCatalogBeamSchemaTest implements Serializable {
 
   @BeforeClass
   public static void setupEmbeddedMetastoreService() throws IOException {
+    try {
+      URI reflectionUtilLocation = ReflectionUtil.class.getProtectionDomain().getCodeSource().getLocation()
+          .toURI();
+      System.out.println("ReflectionUtil location: " + reflectionUtilLocation);
+    } catch (Exception e) {
+      System.out.println(e);
+    }
+
     service = new EmbeddedMetastoreService(TMP_FOLDER.getRoot().getAbsolutePath());
   }
 
