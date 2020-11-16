@@ -329,7 +329,7 @@ if (project.hasProperty('javaLinkageArtifactIds')) {
 
   configurations { linkageCheckerJava }
   dependencies {
-    linkageCheckerJava "com.google.cloud.tools:dependencies:1.5.0"
+    linkageCheckerJava "com.google.cloud.tools:dependencies:1.5.4"
   }
 
   // We need to evaluate all the projects first so that we can find depend on all the
@@ -344,6 +344,10 @@ if (project.hasProperty('javaLinkageArtifactIds')) {
     dependsOn project.getTasksByName('publishMavenJavaPublicationToMavenLocal', true /* recursively */)
     classpath = project.configurations.linkageCheckerJava
     main = 'com.google.cloud.tools.opensource.classpath.LinkageCheckerMain'
+
+    // Linkage Checker analyzes the class path of a pseudo project that depends on
+    // the comma-separated list of Maven artifacts.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/LinkageCheckerMain
     def arguments = ['-a', project.javaLinkageArtifactIds.split(',').collect({
       if (it.contains(':')) {
         "${project.ext.mavenGroupId}:${it}"
